@@ -1,0 +1,195 @@
+<!-- Header con navegación -->
+<header class="header">
+  <nav class="nav">
+    <div class="logo">ODM Envíos</div>
+    <ul class="nav-menu">
+      <li><a href="#">Tipos de envíos</a></li>
+      <li><a href="javascript:void(0)" (click)="openModal()" class="active">Tarifas preferenciales</a></li>
+      <li><a href="#">Políticas de envío</a></li>
+      <li><a href="#">Preguntas frecuentes</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- Hero section -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>AHORRA HASTA 60% EN LOGÍSTICA PARA TU EMPRESA</h1>
+    <ul class="benefits">
+      <li>✓ Tarifas preferenciales para empresas</li>
+      <li>✓ Envía y recibe paquetes el mismo día (sin costo extra)</li>
+      <li>✓ Cobertura en zonas extendidas (sin costo extra)</li>
+      <li>✓ Servicio ocurre, en más de 50 ciudades (Bajío, Norte y Centro del país)</li>
+    </ul>
+    
+    <!-- Botón centrado -->
+    <div class="tarifas-button-container">
+      <button class="btn-tarifas" (click)="openModal()">
+        <span>📊</span> VER TARIFAS PREFERENCIALES
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Calculadora -->
+<section class="calculator-section">
+  <div class="container">
+    <h2 class="section-title">CALCULADORA DE TARIFAS</h2>
+    <p class="section-subtitle">Cotiza tu envío desde CDMX</p>
+    
+    <!-- Grid de 2 columnas: Formulario | Resultado -->
+    <div class="calculator-grid">
+      <!-- FORMULARIO (Columna izquierda) -->
+      <form [formGroup]="calculatorForm" (ngSubmit)="onSubmit()" class="calculator-form">
+        <div class="form-group">
+          <label>📍 ORIGEN</label>
+          <div class="origin-box">
+            <span>Ciudad de México (CDMX)</span>
+          </div>
+          <small class="hint">El origen siempre es Ciudad de México (CDMX).</small>
+        </div>
+
+        <div class="form-group">
+          <label>🎯 DESTINO *</label>
+          <select formControlName="destino" class="form-control">
+            <option value="" selected>-- SELECCIONA UN DESTINO --</option>
+            <option *ngFor="let destino of destinos" [value]="destino">
+              {{ destino }}
+            </option>
+          </select>
+          <div class="error" *ngIf="calculatorForm.get('destino')?.touched && calculatorForm.get('destino')?.invalid">
+            Debes seleccionar un destino
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>⚖️ PESO DEL PAQUETE (kg) *</label>
+          <input type="number" formControlName="peso" step="0.1" min="0.1" max="30" 
+                 class="form-control" placeholder="Ej: 2">
+          <div class="error" *ngIf="calculatorForm.get('peso')?.touched && calculatorForm.get('peso')?.invalid">
+            <span *ngIf="calculatorForm.get('peso')?.errors?.['required']">El peso es requerido</span>
+            <span *ngIf="calculatorForm.get('peso')?.errors?.['min']">El peso mínimo es 0.1 kg</span>
+            <span *ngIf="calculatorForm.get('peso')?.errors?.['max']">El peso máximo es 30 kg</span>
+          </div>
+          
+          <div class="weight-ranges">
+            <span>Rangos disponibles:</span>
+            <div class="range-tags">
+              <span class="range-tag">Sobre (<0.1 kg)</span>
+              <span class="range-tag">< 1 kg</span>
+              <span class="range-tag">1–10 kg</span>
+              <span class="range-tag">11–20 kg</span>
+              <span class="range-tag">21–30 kg</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn-cotizar" [disabled]="loading">
+            {{ loading ? 'CALCULANDO...' : 'CALCULAR PRECIO →' }}
+          </button>
+          <button type="button" class="btn-limpiar" (click)="onClear()">
+            LIMPIAR
+          </button>
+        </div>
+
+        <div class="error-message" *ngIf="error">
+          ⚠️ {{ error }}
+        </div>
+      </form>
+
+      <!-- RESULTADO (Columna derecha) -->
+      <div class="calculator-result" *ngIf="showResult && result; else placeholder">
+        <h3>COTIZACIÓN</h3>
+        
+        <div class="result-item">
+          <span>Categoría</span>
+          <strong>{{ result.categoria }}</strong>
+        </div>
+        
+        <div class="result-item">
+          <span>Destino</span>
+          <strong>{{ result.destino }}</strong>
+        </div>
+        
+        <div class="result-item">
+          <span>Peso</span>
+          <strong>{{ result.peso }} kg</strong>
+        </div>
+        
+        <div class="result-total">
+          <span>TOTAL ESTIMADO</span>
+          <div class="price">
+            {{ result.precio | currency:'MXN':'symbol-narrow':'1.2-2' }}
+            <small>MXN</small>
+          </div>
+        </div>
+        
+        <div class="result-footer">
+          <small>* Tarifas preferenciales para empresas</small>
+        </div>
+      </div>
+
+      <!-- Placeholder cuando no hay resultado -->
+      <ng-template #placeholder>
+        <div class="calculator-result placeholder">
+          <div class="placeholder-content">
+            <span class="placeholder-icon">📦</span>
+            <p>Completa el formulario para ver tu cotización</p>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL de Tarifas Preferenciales -->
+<div class="modal" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>TARIFAS PREFERENCIALES</h2>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <p class="modal-subtitle">Tarifas desde CDMX (precios en MXN)</p>
+      
+      <div class="table-responsive">
+        <table class="tarifas-table">
+          <thead>
+            <tr>
+              <th>Oficina Destino</th>
+              <th>Sobre (<0.1kg)</th>
+              <th>Paquete <1kg</th>
+              <th>Cajas 1-10kg</th>
+              <th>Cajas 11-20kg</th>
+              <th>Cajas 21-30kg</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let destino of listaDestinosCompleta">
+              <td class="destino-cell"><strong>{{ destino }}</strong></td>
+              <td class="price-cell">${{ tarifas[destino]?.sobre?.toFixed(2) }}</td>
+              <td class="price-cell">${{ tarifas[destino]?.menos1kg?.toFixed(2) }}</td>
+              <td class="price-cell">${{ tarifas[destino]?.cajas1_10?.toFixed(2) }}</td>
+              <td class="price-cell">${{ tarifas[destino]?.cajas11_20?.toFixed(2) }}</td>
+              <td class="price-cell">${{ tarifas[destino]?.cajas21_30?.toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="modal-footer">
+        <p>* Tarifas preferenciales para empresas - Aplica restricciones</p>
+        <button class="btn-cerrar" (click)="closeModal()">CERRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p>Omnibus de Mexico - 2026</p>
+  </div>
+</footer>
