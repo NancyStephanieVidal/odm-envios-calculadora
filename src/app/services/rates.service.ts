@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environments/environment'; // ✅ RUTA COMPLETA
 
 export interface Destino {
   destino: string;
@@ -27,8 +28,7 @@ export interface CalculoResponse {
   providedIn: 'root'
 })
 export class RatesService {
-  // ✅ CAMBIA ESTO: usa la URL de Render
-  private apiUrl = 'https://odm-envios-calculadora.onrender.com/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
