@@ -23,7 +23,7 @@ if (process.env.DATABASE_URL) {
         user: 'odm_user',      // Tu usuario de PostgreSQL
         password: '97fdhp0S9JdvPSmUp9pcnYRpfQiK16kB', // Tu contraseña de PostgreSQL
         database: 'odm_envios',
-        ssl: false
+        ssl: { rejectUnauthorized: false } // ← AHORA CON SSL
     };
 }
 
