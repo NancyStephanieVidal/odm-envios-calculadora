@@ -1,10 +1,6 @@
--- Crear la base de datos
-CREATE DATABASE IF NOT EXISTS odm_envios;
-USE odm_envios;
-
--- Crear la tabla
+-- Crear la tabla (sin CREATE DATABASE)
 CREATE TABLE IF NOT EXISTS tarifas_envios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     destino VARCHAR(100) NOT NULL,
     sobre DECIMAL(10,2) NOT NULL,
     menos_1kg DECIMAL(10,2) NOT NULL,
