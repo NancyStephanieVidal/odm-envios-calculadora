@@ -27,7 +27,8 @@ export interface CalculoResponse {
   providedIn: 'root'
 })
 export class RatesService {
-  private apiUrl = 'http://localhost:3000/api';
+  // ✅ CAMBIA ESTO: usa la URL de Render
+  private apiUrl = 'https://odm-envios-calculadora.onrender.com/api';
 
   constructor(private http: HttpClient) { }
 
