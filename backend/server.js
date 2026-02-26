@@ -6,11 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuración para XAMPP - SIN CONTRASEÑA
-const db = mysql.createConnection({
+// ✅ CAMBIA ESTO: Usa variable de entorno para la conexión
+const db = mysql.createConnection(process.env.DATABASE_URL || {
     host: 'localhost',
     user: 'root',
-    password: '', // ← IMPORTANTE: VACÍO para XAMPP
+    password: '',
     database: 'odm_envios'
 });
 
