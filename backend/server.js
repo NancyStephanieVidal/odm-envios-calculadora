@@ -18,10 +18,10 @@ if (process.env.DATABASE_URL) {
 } else {
     // Desarrollo local - usa credenciales directas
     poolConfig = {
-        host: 'localhost',
+        host: 'dpg-d6g4snbh46gs738op670-a.oregon-postgres.render.com',
         port: 5432,
-        user: 'postgres',      // Tu usuario de PostgreSQL
-        password: 'proyect2026_sitio', // Tu contraseña de PostgreSQL
+        user: 'odm_user',      // Tu usuario de PostgreSQL
+        password: '97fdhp0S9JdvPSmUp9pcnYRpfQiK16kB', // Tu contraseña de PostgreSQL
         database: 'odm_envios',
         ssl: false
     };
