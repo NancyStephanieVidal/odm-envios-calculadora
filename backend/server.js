@@ -1,24 +1,45 @@
 const express = require('express');
-const { Pool } = require('pg'); // Cambio de mysql2 a pg
+const { Pool } = require('pg');
 const cors = require('cors');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Configuración para PostgreSQL en Render
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+// Configuración para PostgreSQL (local o producción)
+let poolConfig;
+
+if (process.env.DATABASE_URL) {
+    // Producción (Render) - usa la URL completa
+    poolConfig = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    };
+} else {
+    // Desarrollo local - usa credenciales directas
+    poolConfig = {
+        host: 'localhost',
+        port: 5432,
+        user: 'postgres',      // Tu usuario de PostgreSQL
+        password: 'proyect2026_sitio', // Tu contraseña de PostgreSQL
+        database: 'odm_envios',
+        ssl: false
+    };
+}
+
+const pool = new Pool(poolConfig);
 
 // Probar conexión
 pool.connect((err, client, release) => {
     if (err) {
         console.error('❌ Error conectando a PostgreSQL:');
         console.error('Detalle:', err.message);
+        if (!process.env.DATABASE_URL) {
+            console.log('\n📌 Para desarrollo local:');
+            console.log('1. Asegúrate que PostgreSQL esté corriendo');
+            console.log('2. Verifica que la base de datos "odm_envios" exista');
+            console.log('3. Usa el usuario y contraseña correctos');
+        }
         return;
     }
     console.log('✅ Conectado a PostgreSQL correctamente');
@@ -30,6 +51,7 @@ pool.connect((err, client, release) => {
 app.get('/api/test', (req, res) => {
     res.json({ 
         message: 'Servidor funcionando',
+        environment: process.env.DATABASE_URL ? 'production' : 'development',
         time: new Date().toLocaleString()
     });
 });
@@ -83,7 +105,7 @@ app.post('/api/calcular', async (req, res) => {
         return res.status(400).json({ error: 'Peso máximo 30 kg' });
     }
     
-    // PostgreSQL usa $1, $2 para parámetros
+    // PostgreSQL usa $1 en lugar de ?
     const query = `SELECT ${columna} as precio FROM tarifas_envios WHERE destino = $1`;
     
     try {
