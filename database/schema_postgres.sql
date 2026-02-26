@@ -1,15 +1,15 @@
--- Crear la tabla (sin CREATE DATABASE)
+-- Crear tabla para PostgreSQL
 CREATE TABLE IF NOT EXISTS tarifas_envios (
     id SERIAL PRIMARY KEY,
     destino VARCHAR(100) NOT NULL,
-    sobre DECIMAL(10,2) NOT NULL,
-    menos_1kg DECIMAL(10,2) NOT NULL,
-    cajas_1_10kg DECIMAL(10,2) NOT NULL,
-    cajas_11_20kg DECIMAL(10,2) NOT NULL,
-    cajas_21_30kg DECIMAL(10,2) NOT NULL
+    sobre NUMERIC(10,2) NOT NULL,
+    menos_1kg NUMERIC(10,2) NOT NULL,
+    cajas_1_10kg NUMERIC(10,2) NOT NULL,
+    cajas_11_20kg NUMERIC(10,2) NOT NULL,
+    cajas_21_30kg NUMERIC(10,2) NOT NULL
 );
 
--- Insertar todos los datos
+-- Insertar todos los datos (exactamente igual que en MySQL)
 INSERT INTO tarifas_envios (destino, sobre, menos_1kg, cajas_1_10kg, cajas_11_20kg, cajas_21_30kg) VALUES
 ('Caborca, Sonora', 191.00, 287.00, 383.00, 575.00, 766.00),
 ('Ciudad Obregón, Son.', 163.00, 246.00, 327.00, 492.00, 656.00),

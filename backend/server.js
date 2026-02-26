@@ -1,32 +1,29 @@
 const express = require('express');
-const mysql = require('mysql2');
+const { Pool } = require('pg'); // Cambio de mysql2 a pg
 const cors = require('cors');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// ✅ CAMBIA ESTO: Usa variable de entorno para la conexión
-const db = mysql.createConnection(process.env.DATABASE_URL || {
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'odm_envios'
+// Configuración para PostgreSQL en Render
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
-// Conectar a MySQL
-db.connect(err => {
+// Probar conexión
+pool.connect((err, client, release) => {
     if (err) {
-        console.error('❌ Error conectando a MySQL:');
-        console.error('Verifica que:');
-        console.error('1. MySQL esté corriendo en XAMPP (verde)');
-        console.error('2. La base de datos "odm_envios" exista');
-        console.error('3. El usuario sea "root" sin contraseña');
+        console.error('❌ Error conectando a PostgreSQL:');
         console.error('Detalle:', err.message);
         return;
     }
-    console.log('✅ Conectado a MySQL correctamente');
+    console.log('✅ Conectado a PostgreSQL correctamente');
     console.log('📊 Base de datos: odm_envios');
+    release();
 });
 
 // Endpoint de prueba
@@ -38,24 +35,22 @@ app.get('/api/test', (req, res) => {
 });
 
 // Endpoint para obtener todos los destinos
-app.get('/api/destinos', (req, res) => {
+app.get('/api/destinos', async (req, res) => {
     console.log('📡 Obteniendo destinos...');
     
-    db.query('SELECT destino FROM tarifas_envios ORDER BY destino', (err, result) => {
-        if (err) {
-            console.error('❌ Error en consulta:', err);
-            res.status(500).json({ error: 'Error en la base de datos' });
-            return;
-        }
-        
-        const destinos = result.map(r => r.destino);
+    try {
+        const result = await pool.query('SELECT destino FROM tarifas_envios ORDER BY destino');
+        const destinos = result.rows.map(r => r.destino);
         console.log(`✅ ${destinos.length} destinos encontrados`);
         res.json(destinos);
-    });
+    } catch (err) {
+        console.error('❌ Error en consulta:', err);
+        res.status(500).json({ error: 'Error en la base de datos' });
+    }
 });
 
 // Endpoint para calcular precio
-app.post('/api/calcular', (req, res) => {
+app.post('/api/calcular', async (req, res) => {
     console.log('📡 Calculando precio...');
     console.log('Datos recibidos:', req.body);
     
@@ -88,20 +83,18 @@ app.post('/api/calcular', (req, res) => {
         return res.status(400).json({ error: 'Peso máximo 30 kg' });
     }
     
-    const query = `SELECT ${columna} as precio FROM tarifas_envios WHERE destino = ?`;
+    // PostgreSQL usa $1, $2 para parámetros
+    const query = `SELECT ${columna} as precio FROM tarifas_envios WHERE destino = $1`;
     
-    db.query(query, [destino], (err, result) => {
-        if (err) {
-            console.error('❌ Error en consulta:', err);
-            return res.status(500).json({ error: 'Error en la base de datos' });
-        }
+    try {
+        const result = await pool.query(query, [destino]);
         
-        if (result.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Destino no encontrado' });
         }
         
         const response = {
-            precio: result[0].precio,
+            precio: parseFloat(result.rows[0].precio),
             destino: destino,
             peso: peso,
             categoria: categoria
@@ -109,29 +102,29 @@ app.post('/api/calcular', (req, res) => {
         
         console.log('✅ Precio calculado:', response);
         res.json(response);
-    });
+    } catch (err) {
+        console.error('❌ Error en consulta:', err);
+        return res.status(500).json({ error: 'Error en la base de datos' });
+    }
 });
 
 // Endpoint para obtener todas las tarifas
-app.get('/api/tarifas', (req, res) => {
+app.get('/api/tarifas', async (req, res) => {
     console.log('📡 Obteniendo todas las tarifas...');
     
-    const query = 'SELECT * FROM tarifas_envios ORDER BY destino';
-    
-    db.query(query, (err, result) => {
-        if (err) {
-            console.error('❌ Error en consulta:', err);
-            return res.status(500).json({ error: 'Error en la base de datos' });
-        }
-        
-        console.log(`✅ ${result.length} tarifas encontradas`);
-        res.json(result);
-    });
+    try {
+        const result = await pool.query('SELECT * FROM tarifas_envios ORDER BY destino');
+        console.log(`✅ ${result.rows.length} tarifas encontradas`);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ Error en consulta:', err);
+        return res.status(500).json({ error: 'Error en la base de datos' });
+    }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`✅ Servidor corriendo en puerto ${PORT}`);
     console.log('📝 Endpoints:');
     console.log('   - GET  /api/test');
     console.log('   - GET  /api/destinos');
